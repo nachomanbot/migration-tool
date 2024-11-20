@@ -12,18 +12,18 @@ Script made by Daniel Emery, Head of Search at Bang Digital.
 
 Script adapted for Streamlit by Nathaniel Alzaga
 
-👉🏼 **What It Is**  
+⚡ **What It Is**  
 This tool automates redirect mappings during site migrations by matching URLs from an old site to a new site based on content similarity.
 
-👉🏼 **How to Use It:**  
+⚡ **How to Use It:**  
 1. Upload `origin.csv` and `destination.csv` files. Ensure that your file contains the URL, Title, Meta Description, and H1.
 2. Click **"Let's Go!"** to initiate the matching process.
 3. Download the resulting `output.csv` file containing matched URLs with similarity scores.
 
-👉🏼 **Note:**  
+⚡ **Note:**  
 - Ensure your files are in `.csv` format with relevant columns for URL matching.
 - Files should not exceed 2MB each.
-- Using relative URLs is recommended.
+- It's recommended to use relative URLs.
 - This script can be a time saver but please check everything thoroughly, especially on client/production sites.
 """)
 
