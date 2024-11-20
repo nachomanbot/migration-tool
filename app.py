@@ -9,6 +9,7 @@ st.title("AI-Powered Redirect Mapping Tool")
 
 st.markdown("""
 Script made by Daniel Emery, Head of Search at Bang Digital.
+
 Script adapted for Streamlit by Nathaniel Alzaga
 
 👉🏼 **What It Is**  
