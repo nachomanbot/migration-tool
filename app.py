@@ -8,6 +8,7 @@ import faiss
 st.title("AI-Powered Redirect Mapping Tool")
 
 st.markdown("""
+Script made by Daniel Emery, Head of Search at Bang Digital.
 👉🏼 **What It Is**  
 This is a Python tool for Google Colab that automates redirect mappings during site migrations by matching URLs from an old site to a new site based on content similarity. Users can interactively choose the relevant columns from their CSV data for URL matching.
 
