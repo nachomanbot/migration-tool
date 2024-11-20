@@ -10,89 +10,86 @@ st.title("AI-Powered Redirect Mapping Tool")
 st.markdown("""
 Script made by Daniel Emery, Head of Search at Bang Digital.
 
-👉🏼 **What It Is**  
-This is a Python tool for Google Colab that automates redirect mappings during site migrations by matching URLs from an old site to a new site based on content similarity. Users can interactively choose the relevant columns from their CSV data for URL matching.
+Script adapted for Streamlit.
 
-👉🏼 **What It's Made With:**  
-- **faiss-cpu**: A library for efficient similarity search and clustering of dense vectors.  
-- **sentence-transformers**: A Python framework for state-of-the-art sentence, text, and image embeddings.  
-- **pandas**: An open-source data manipulation and analysis library.  
-- **ipywidgets**: An interactive widget library for Jupyter notebooks.  
+👉🏼 **What It Is**  
+This tool automates redirect mappings during site migrations by matching URLs from an old site to a new site based on content similarity.
 
 👉🏼 **How to Use It:**  
-1. Prepare `origin.csv` and `destination.csv` with the page URL in the first column, followed by titles, meta descriptions, and headings. Remove unwanted URLs and duplicates.  
-2. Upload the `origin.csv` and `destination.csv` files.
-3. Click **"Let's Go!"** to initiate the matching process.  
-4. Review and manually correct any inaccuracies in `output.csv`.  
-5. Download `output.csv` automatically from the browser's download directory after the script completion.
+1. Upload `origin.csv` and `destination.csv` files.
+2. Select columns for similarity matching.
+3. Click **"Let's Go!"** to initiate the matching process.
+4. Download the resulting `output.csv` file containing matched URLs with similarity scores.
 
 👉🏼 **Note:**  
-- I recommend using relative URLs (do a find and replace in Google Sheets for the domain).  
-- Be sure to use only URLs with 200 status code and no UTM parameters, etc.  
-- This script can be a time saver but please check everything thoroughly, especially on client/production sites.
+- Ensure your files are in `.csv` format with relevant columns for URL matching.
+- Files should not exceed 2MB each.
 """)
 
 # Step 1: Upload Files
-st.header("Upload Files")
+st.header("Upload Your Files")
 uploaded_origin = st.file_uploader("Upload origin.csv", type="csv")
 uploaded_destination = st.file_uploader("Upload destination.csv", type="csv")
 
-# Step 2: Check File Uploads and Display Notifications
 if uploaded_origin and uploaded_destination:
-    if uploaded_origin.size > 2 * 1024 * 1024 or uploaded_destination.size > 2 * 1024 * 1024:  # Limit: 2MB per file
-        st.error("One or both files exceed the size limit of 2MB. Please upload smaller files.")
-    else:
-        st.success("Files uploaded successfully!")
-        process_button = st.button("Let's Go!")  # Add "Let's Go!" button
-        
-        if process_button:
-            # Step 3: Load Data and Perform Matching
-            origin_df = pd.read_csv(uploaded_origin)
-            destination_df = pd.read_csv(uploaded_destination)
+    st.success("Files uploaded successfully!")
+    
+    # Step 2: Load Data
+    origin_df = pd.read_csv(uploaded_origin)
+    destination_df = pd.read_csv(uploaded_destination)
 
-            st.header("Select Columns for Similarity Matching")
-            common_columns = list(set(origin_df.columns) & set(destination_df.columns))
-            selected_columns = st.multiselect("Choose columns for matching", common_columns)
+    # Find common columns
+    common_columns = list(set(origin_df.columns) & set(destination_df.columns))
+    st.header("Select Columns for Similarity Matching")
+    selected_columns = st.multiselect(
+        "Choose columns for matching:",
+        common_columns,
+        help="Select columns from both datasets to use for matching URLs based on content similarity."
+    )
 
-            if selected_columns:
-                st.info("Processing... Please wait.")
-                # Combine selected columns into a single text field
-                origin_df['combined_text'] = origin_df[selected_columns].fillna('').apply(lambda x: ' '.join(x), axis=1)
-                destination_df['combined_text'] = destination_df[selected_columns].fillna('').apply(lambda x: ' '.join(x), axis=1)
+    # Step 3: Button to Process Matching
+    if st.button("Let's Go!"):
+        if not selected_columns:
+            st.error("Please select at least one column for similarity matching.")
+        else:
+            st.info("Processing data... This may take a while.")
 
-                # Load pre-trained model
-                model = SentenceTransformer('all-MiniLM-L6-v2')
+            # Combine the selected columns into a single text column for vectorization
+            origin_df['combined_text'] = origin_df[selected_columns].fillna('').apply(lambda x: ' '.join(x), axis=1)
+            destination_df['combined_text'] = destination_df[selected_columns].fillna('').apply(lambda x: ' '.join(x), axis=1)
 
-                # Vectorize text
-                origin_embeddings = model.encode(origin_df['combined_text'].tolist(), show_progress_bar=True)
-                destination_embeddings = model.encode(destination_df['combined_text'].tolist(), show_progress_bar=True)
+            # Use a pre-trained model for embedding
+            model = SentenceTransformer('all-MiniLM-L6-v2')
 
-                # Create FAISS index
-                dimension = origin_embeddings.shape[1]
-                faiss_index = faiss.IndexFlatL2(dimension)
-                faiss_index.add(destination_embeddings.astype('float32'))
+            # Vectorize the combined text
+            origin_embeddings = model.encode(origin_df['combined_text'].tolist(), show_progress_bar=True)
+            destination_embeddings = model.encode(destination_df['combined_text'].tolist(), show_progress_bar=True)
 
-                # Perform search
-                D, I = faiss_index.search(origin_embeddings.astype('float32'), k=1)
-                similarity_scores = 1 - (D / np.max(D))
+            # Create a FAISS index
+            dimension = origin_embeddings.shape[1]
+            faiss_index = faiss.IndexFlatL2(dimension)
+            faiss_index.add(destination_embeddings.astype('float32'))
 
-                # Prepare output
-                matches_df = pd.DataFrame({
-                    'origin_url': origin_df['Address'],
-                    'matched_url': destination_df['Address'].iloc[I.flatten()].values,
-                    'similarity_score': np.round(similarity_scores.flatten(), 4)
-                })
+            # Perform the search for the nearest neighbors
+            D, I = faiss_index.search(origin_embeddings.astype('float32'), k=1)
 
-                # Display Results
-                st.header("Results")
-                st.write(matches_df)
+            # Calculate similarity scores
+            similarity_scores = 1 - (D / np.max(D))
 
-                # Download Button
-                st.download_button(
-                    label="Download Results as CSV",
-                    data=matches_df.to_csv(index=False),
-                    file_name="redirect_mapping_output.csv",
-                    mime="text/csv",
-                )
-            else:
-                st.warning("Please select at least one column to proceed.")
+            # Create the output DataFrame with similarity scores
+            matches_df = pd.DataFrame({
+                'origin_url': origin_df['Address'],  # Replace 'Address' with the actual column name in your dataset
+                'matched_url': destination_df['Address'].iloc[I.flatten()].values,
+                'similarity_score': np.round(similarity_scores.flatten(), 4)
+            })
+
+            # Step 4: Display and Download Results
+            st.success("Matching complete! Download your results below.")
+            st.write(matches_df)
+
+            st.download_button(
+                label="Download Results as CSV",
+                data=matches_df.to_csv(index=False),
+                file_name="redirect_mapping_output.csv",
+                mime="text/csv",
+            )
