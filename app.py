@@ -37,10 +37,10 @@ if uploaded_origin and uploaded_destination:
     
     # Step 2: Load Data with Encoding Handling
     try:
-        origin_df = pd.read_csv(uploaded_origin, encoding="utf-8-sig")
-        destination_df = pd.read_csv(uploaded_destination, encoding="utf-8-sig")
+        origin_df = pd.read_csv(uploaded_origin, encoding="ISO-8859-1")
+        destination_df = pd.read_csv(uploaded_destination, encoding="ISO-8859-1")
     except UnicodeDecodeError:
-        st.error("Error reading CSV files. Please ensure they are saved in UTF-8 encoding.")
+        st.error("Error reading CSV files. Please ensure they are saved in a supported encoding (UTF-8 or ISO-8859-1).")
         st.stop()
 
     # Combine all columns for similarity matching
