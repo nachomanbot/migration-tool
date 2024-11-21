@@ -10,7 +10,7 @@ st.title("AI-Powered Redirect Mapping Tool")
 st.markdown("""
 Script made by Daniel Emery, Head of Search at Bang Digital.
 
-Script adapted for Streamlit by Nathaniel Alzaga
+Script adapted for Streamlit by NDA
 
 ⚡ **What It Is**  
 This tool automates redirect mappings during site migrations by matching URLs from an old site to a new site based on content similarity.
