@@ -71,8 +71,8 @@ if uploaded_origin and uploaded_destination:
 
         # Create the output DataFrame with similarity scores
         matches_df = pd.DataFrame({
-            'origin_url': origin_df['Address'],  # Replace 'Address' with the actual column name in your dataset
-            'matched_url': destination_df['Address'].iloc[I.flatten()].values,
+            'origin_url': origin_df.iloc[:, 0],  # Replace 'Address' with the actual column name in your dataset
+            'matched_url': destination_df.iloc[:, 0].iloc[I.flatten()].values,
             'similarity_score': np.round(similarity_scores.flatten(), 4)
         })
 
