@@ -22,6 +22,7 @@ This tool automates redirect mappings during site migrations by matching URLs fr
 
 ⚡ **Note:**  
 - Ensure your files are in `.csv` format with relevant columns for URL matching.
+- Ensure that you remove any duplicates and the http status of all URLs is 200.
 - It's recommended to use relative URLs.
 - This script can be a time saver but please check everything thoroughly, especially on client/production sites.
 """)
