@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import faiss
-import chardet
 
 # Set the page title
 st.title("AI-Powered Redirect Mapping Tool")
@@ -36,16 +35,13 @@ uploaded_destination = st.file_uploader("Upload destination.csv", type="csv")
 if uploaded_origin and uploaded_destination:
     st.success("Files uploaded successfully!")
     
-    # Step 2: Detect Encoding and Load Data
-    raw_data_origin = uploaded_origin.read()
-    detected_encoding_origin = chardet.detect(raw_data_origin)['encoding']
-    uploaded_origin.seek(0)  # Reset file pointer
-    origin_df = pd.read_csv(uploaded_origin, encoding=detected_encoding_origin)
-
-    raw_data_destination = uploaded_destination.read()
-    detected_encoding_destination = chardet.detect(raw_data_destination)['encoding']
-    uploaded_destination.seek(0)  # Reset file pointer
-    destination_df = pd.read_csv(uploaded_destination, encoding=detected_encoding_destination)
+    # Step 2: Load Data with Encoding Handling
+    try:
+        origin_df = pd.read_csv(uploaded_origin, encoding="utf-8-sig")
+        destination_df = pd.read_csv(uploaded_destination, encoding="utf-8-sig")
+    except UnicodeDecodeError:
+        st.error("Error reading CSV files. Please ensure they are saved in UTF-8 encoding.")
+        st.stop()
 
     # Combine all columns for similarity matching
     origin_df['combined_text'] = origin_df.fillna('').apply(lambda x: ' '.join(x.astype(str)), axis=1)
